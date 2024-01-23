@@ -41,7 +41,7 @@ def ppo(obs_shape, ac_shape, config, props, load_dir=None):
 
 
 def train(config):
-    logger = Logger(name='PPOCOOP', args=config, log_dir='/Users/changhee/Lab/RL/marlenv_hotfix_copy/rl2/rl2/examples/runs/DATA/Coop_lose_-10'+'_'+str(config.num_snakes)+'_'+str(config.custom_rewardf.kill)+'_'+str(config.custom_rewardf.time))
+    logger = Logger(name='PPOCOOP', args=config, log_dir='/Users/changhee/Lab/RL/marlenv_hotfix_copy/rl2/rl2/examples/runs/DATA/Coop'+'_'+str(config.num_snakes)+'_'+str(config.custom_rewardf.lose)+'_'+str(config.custom_rewardf.kill)+'_'+str(config.custom_rewardf.time))
     env, observation_shape, action_shape, props = make_snake(
         env_id='SnakeCoop-v1',
         num_envs=config.n_env,
@@ -146,13 +146,13 @@ if __name__ == "__main__":
         'custom_rewardf': {
             'fruit': 1.0,
             'kill': -1.0,
-            'lose': -100.0,
+            'lose': -10.0,
             'win': 0.0,
             'time': -0.01
         }
     }
     config = EasyDict(myconfig)
 
-    # log_dir = train(config)
-    test(config)
+    log_dir = train(config)
+    # test(config)
     

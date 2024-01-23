@@ -64,7 +64,7 @@ class PPOModel(TorchModel):
                  reorder: bool = False,
                  recurrent: bool = False,
                  **kwargs):
-        self.device = torch.device("mps")
+        # self.device = torch.device("mps")
         super().__init__(observation_shape, action_shape, **kwargs)
         if hasattr(encoder, 'output_shape'):
             encoded_dim = encoder.output_shape

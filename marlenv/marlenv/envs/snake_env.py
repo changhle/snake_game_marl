@@ -144,6 +144,8 @@ class SnakeEnv(gym.Env):
         # Episodic stats
         self._reset_epi_stats()
         self.episode_length = 0
+        self.fruits = 0
+        self.max_fruits = 0
 
         self.rows = [
             [['straight', 'left', 'right', 'fruit', 'kill']],
@@ -273,6 +275,10 @@ class SnakeEnv(gym.Env):
                 snake.reward += self.reward_dict['kill'] * snake.kills
                 snake.reward += self.reward_dict['win'] * snake.win
                 # print(i, snake.death, self.epi_steps)
+                if snake.fruit:
+                    self.fruits += 1
+                    if self.fruits > self.max_fruits:
+                        self.max_fruits = self.fruits
                 self.rows[i].append([
                     1 if actions[i] == 0 else 0,
                     1 if actions[i] == 1 else 0,
@@ -324,7 +330,9 @@ class SnakeEnv(gym.Env):
                 {'episode_scores': self.epi_scores,
                  'episode_steps': self.epi_steps,
                  'episode_fruits': self.epi_fruits,
-                 'episode_kills': self.epi_kills})
+                 'episode_kills': self.epi_kills,
+                 'episode_length': self.episode_length,
+                 'fruits': self.max_fruits})
 
             self._reset_epi_stats()
 

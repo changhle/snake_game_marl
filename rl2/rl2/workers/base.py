@@ -130,6 +130,7 @@ class MaxStepWorker(RolloutWorker):
         print('run')
         for step in range(self.max_steps // self.n_env + 1):
             done, info, results = self.rollout()
+            print(info)
 
             # Save rendered image as gif
             if self.render:
