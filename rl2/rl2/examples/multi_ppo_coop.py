@@ -14,6 +14,8 @@ from rl2.examples.temp_logger import Logger
 from rl2.agents.ppo import PPOModel, PPOAgent
 from rl2.workers.multi_agent import MAMaxStepWorker, MAEpisodicWorker
 
+import multiprocessing as mp
+
 # FIXME: Remove later
 os.environ['CUDA_VISIBLE_DEVICES'] = '2'
 
@@ -41,12 +43,12 @@ def ppo(obs_shape, ac_shape, config, props, load_dir=None):
 
 
 def train(config):
-    logger = Logger(name='PPOCOOP', args=config, log_dir='/Users/changhee/Lab/RL/marlenv_hotfix_copy/rl2/rl2/examples/runs/DATA/Coop'+'_'+str(config.num_snakes)+'_'+str(config.custom_rewardf.lose)+'_'+str(config.custom_rewardf.kill)+'_'+str(config.custom_rewardf.time))
+    logger = Logger(name='PPOCOOP', args=config, log_dir='/mnt/d/Lab/snake_game_marl/rl2/rl2/examples/runs/DATA/Add_Coop'+'_'+str(config.num_snakes)+'_'+str(config.custom_rewardf.fruit)+'_'+str(config.custom_rewardf.kill)+'_'+str(config.custom_rewardf.time))
     env, observation_shape, action_shape, props = make_snake(
         env_id='SnakeCoop-v1',
         num_envs=config.n_env,
         num_snakes=config.num_snakes,
-        num_fruits=config.num_snakes * 2,
+        # num_fruits=config.num_snakes * 2,
         width=config.width,
         height=config.height,
         vision_range=config.vision_range,
@@ -58,7 +60,9 @@ def train(config):
 
     agents = []
     for _ in range(config.num_snakes):
-        agents.append(ppo(observation_shape, action_shape, config, props))
+        # agents.append(ppo(observation_shape, action_shape, config, props))
+        agents.append(ppo(observation_shape, action_shape, config, props, load_dir=
+                        '/mnt/d/Lab/snake_game_marl/rl2/rl2/examples/runs/DATA/Coop_4_1.0_-10.0_-0.05/ckpt/agent'+str(_)+'/1000k/PPOModel.pt'))
 
     worker = MAMaxStepWorker(
         env, props.num_envs, agents,                     
@@ -124,35 +128,34 @@ def test(config, load_dir=None):
     worker.run()
 
 
-if __name__ == "__main__":
-    myconfig = {
-        'n_env': 64,
-        'num_snakes': 2,
-        'width': 20,
-        'height': 20,
-        'vision_range': 5,
-        'frame_stack': 2,
-        'batch_size': 512,
-        'epoch': 4,
-        'max_step': int(1e6),
-        'train_interval': 512,
-        'log_level': 10,
-        'log_interval': 5000,
-        'save_interval': 100000,
-        'lr': 1e-4,
-        'gamma': 0.99,
-        'grad_clip': 10,
-        'tag': 'DATA',
-        'custom_rewardf': {
-            'fruit': 1.0,
-            'kill': -1.0,
-            'lose': -10.0,
-            'win': 0.0,
-            'time': -0.01
-        }
-    }
-    config = EasyDict(myconfig)
+myconfig = {
+		'n_env': 64,
+		'num_snakes': 4,
+		'width': 20,
+		'height': 20,
+		'vision_range': 5,
+		'frame_stack': 2,
+		'batch_size': 512,
+		'epoch': 4,
+		'max_steps': int(1e6),
+		'train_interval': 512,
+		'log_level': 10,
+		'log_interval': 5000,
+		'save_interval': 100000,
+		'lr': 1e-4,
+		'gamma': 0.99,
+		'grad_clip': 10,
+		'tag': 'DATA',
+		'custom_rewardf': {
+			'fruit': 1.0,
+			'kill': -10.0,
+			'lose': -10.0,
+			'win': 0.0,
+			'time': -0.05
+		}
+	}
+config = EasyDict(myconfig)
 
-    log_dir = train(config)
-    # test(config)
-    
+log_dir = train(config)
+# test(config)
+

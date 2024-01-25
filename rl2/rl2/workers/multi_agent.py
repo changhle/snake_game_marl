@@ -97,6 +97,7 @@ class MultiAgentRolloutWorker:
             if dones:
                 self.num_episodes += 1
                 self.env.save_rows(self.data_dir)
+                infos.update(self.env.getExit())
                 obss = self.env.reset()
                 self.scores.append(self.episode_score.mean())
                 self.episode_score = 0.

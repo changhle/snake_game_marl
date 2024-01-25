@@ -61,6 +61,7 @@ class SnakeEnv(gym.Env):
         kwargs
         'reward_dict', 'num_fruits'
         """
+        self.max_fruits = 0
 
         reward_dict = kwargs.pop('reward_dict', SnakeEnv.default_reward_dict)
         if reward_dict.keys() != SnakeEnv.reward_keys:
@@ -116,6 +117,11 @@ class SnakeEnv(gym.Env):
                 shape=[self.num_snakes, *self.grid_shape, self.obs_ch],
                 dtype=np.uint8
             )
+            
+    def getExit(self):
+        if self.max_fruits >= (10 * self.num_snakes) or self.episode_length >= 10:
+            return({'flag': True})
+        return({'flag': False})
 
     def reset(self):
         # Create the grid base
@@ -145,7 +151,6 @@ class SnakeEnv(gym.Env):
         self._reset_epi_stats()
         self.episode_length = 0
         self.fruits = 0
-        self.max_fruits = 0
 
         self.rows = [
             [['straight', 'left', 'right', 'fruit', 'kill']],
@@ -315,7 +320,11 @@ class SnakeEnv(gym.Env):
         self.episode_length += 1
         if self.episode_length >= self.max_episode_steps:
             dones = [True] * self.num_snakes
-
+            
+        info.update({'episode_length': self.episode_length,
+				'fruits': self.max_fruits,
+    			'flag': False})
+  
         if self._done_fn(dones):
             sorted_scores = np.unique(np.sort(self.epi_scores)[::-1])
             ranks = np.array([0 for _ in range(self.num_snakes)])
@@ -324,15 +333,15 @@ class SnakeEnv(gym.Env):
                 idx = np.where(np.array(self.epi_scores) == score)[0]
                 ranks[idx] = base_rank
                 base_rank += len(idx)
-            info['rank'] = list(ranks)
+            # info['rank'] = list(ranks)
 
-            info.update(
-                {'episode_scores': self.epi_scores,
-                 'episode_steps': self.epi_steps,
-                 'episode_fruits': self.epi_fruits,
-                 'episode_kills': self.epi_kills,
-                 'episode_length': self.episode_length,
-                 'fruits': self.max_fruits})
+            # info.update(
+            #     {'episode_scores': self.epi_scores,
+            #      'episode_steps': self.epi_steps,
+            #      'episode_fruits': self.epi_fruits,
+            #      'episode_kills': self.epi_kills,
+            #      'episode_length': self.episode_length,
+            #      'fruits': self.max_fruits})
 
             self._reset_epi_stats()
 

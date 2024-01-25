@@ -130,7 +130,7 @@ class MaxStepWorker(RolloutWorker):
         print('run')
         for step in range(self.max_steps // self.n_env + 1):
             done, info, results = self.rollout()
-            print(info)
+            # print(info)
 
             # Save rendered image as gif
             if self.render:
@@ -178,6 +178,9 @@ class MaxStepWorker(RolloutWorker):
                 else:
                     save_dir = os.getcwd()
                 self.save(save_dir)
+
+            # if info['flag'] == True:
+            #     break
 
 
 class EpisodicWorker(RolloutWorker):

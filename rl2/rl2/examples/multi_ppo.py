@@ -39,11 +39,12 @@ def ppo(obs_shape, ac_shape, config, props, load_dir=None):
 
 
 def train(config):
-    logger = Logger(name='MATRAIN', args=config, log_dir='/Users/changhee/Lab/RL/marlenv_hotfix_copy/rl2/rl2/examples/runs/DATA/Norm'+'_'+str(config.num_snakes)+'_'+str(config.custom_rewardf.lose)+'_'+str(config.custom_rewardf.kill)+'_'+str(config.custom_rewardf.time))
+    logger = Logger(name='MATRAIN', args=config, log_dir='/mnt/d/Lab/snake_game_marl/rl2/rl2/examples/runs/DATA/Norm'+'_'+str(config.num_snakes)+'_'+str(config.custom_rewardf.fruit)+'_'+str(config.custom_rewardf.kill)+'_'+str(config.custom_rewardf.time))
     env, observation_shape, action_shape, props = make_snake(
         num_envs=config.n_env,
         num_snakes=config.num_snakes,
-        num_fruits=config.num_snakes * 2,
+        num_fruits=config.num_snakes,
+        # num_fruits=config.num_snakes * 2,
         width=config.width,
         height=config.height,
         vision_range=config.vision_range,
@@ -65,7 +66,7 @@ def train(config):
                              logger=logger,
                              log_interval=config.log_interval,
                              render=True,
-                             render_interval=5000,
+                             render_interval=50000,
                              is_save=True,
                              save_interval=config.save_interval,
                              )

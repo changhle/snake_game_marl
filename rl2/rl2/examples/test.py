@@ -22,75 +22,98 @@ myconfig = {
         'grad_clip': 10,
         'tag': 'DATA',
         'custom_rewardf': {
-            'fruit': 1.0,
+            'fruit': 10.0,
             'kill': -1.0,
             'lose': -10.0,
             'win': 0.0,
-            'time': -0.05
+            'time': -0.03
         }
     }
 
 if __name__ == "__main__":
 	config = EasyDict(myconfig)
+ 
+	# config.num_snakes = 4
+	# config.custom_rewardf.time = -0.01
+	# config.custom_rewardf.fruit = 1.0
+	# mpc.train(config)
 
-	config.num_snakes = 2
-	config.custom_rewardf.time = -0.05
-	mp.train(config)
-	config.custom_rewardf.time = -0.01
-	mp.train(config)
+	# config.num_snakes = 2
+	# config.custom_rewardf.fruit = 10.0
+	# config.custom_rewardf.time = -0.05
+	# mp.train(config)
+	# config.custom_rewardf.time = -0.03
+	# mp.train(config)
+	# config.custom_rewardf.time = -0.01
+	# mp.train(config)
 	# config.custom_rewardf.time = 0.01
+	# mp.train(config)
+	# config.custom_rewardf.time = 0.03
 	# mp.train(config)
 	# config.custom_rewardf.time = 0.05
 	# mp.train(config)
 
-	config.num_snakes = 3
-	config.custom_rewardf.time = -0.05
-	mp.train(config)
-	config.custom_rewardf.time = -0.01
-	mp.train(config)
+	# config.num_snakes = 3
+	# config.custom_rewardf.time = -0.05
+	# mp.train(config)
+	# config.custom_rewardf.time = -0.03
+	# mp.train(config)
+	# config.custom_rewardf.time = -0.01
+	# mp.train(config)
 	# config.custom_rewardf.time = 0.01
+	# mp.train(config)
+	# config.custom_rewardf.time = 0.03
 	# mp.train(config)
 	# config.custom_rewardf.time = 0.05
 	# mp.train(config)
 
-	config.num_snakes = 4
-	config.custom_rewardf.time = -0.05
-	mp.train(config)
-	config.custom_rewardf.time = -0.01
-	mp.train(config)
+	# config.num_snakes = 4
+	# config.custom_rewardf.time = -0.05
+	# mp.train(config)
+	# config.custom_rewardf.time = -0.03
+	# mp.train(config)
+	# config.custom_rewardf.time = -0.01
+	# mp.train(config)
 	# config.custom_rewardf.time = 0.01
+	# mp.train(config)
+	# config.custom_rewardf.time = 0.03
 	# mp.train(config)
 	# config.custom_rewardf.time = 0.05
 	# mp.train(config)
 
 	##########################################################
 
-	config.num_snakes = 2
-	# config.custom_rewardf.time = -0.05
+	# config.num_snakes = 2
+	# config.custom_rewardf.time = -0.03
 	# mpc.train(config)
 	# config.custom_rewardf.time = -0.01
 	# mpc.train(config)
-	config.custom_rewardf.time = 0.01
-	mpc.train(config)
-	# config.custom_rewardf.time = 0.05
+	# config.custom_rewardf.time = 0.01
+	# mpc.train(config)
+	# config.custom_rewardf.time = 0.03
 	# mpc.train(config)
 
-	config.num_snakes = 3
-	# config.custom_rewardf.time = -0.05
+	# config.num_snakes = 3
+	# config.custom_rewardf.time = -0.03
 	# mpc.train(config)
 	# config.custom_rewardf.time = -0.01
 	# mpc.train(config)
-	config.custom_rewardf.time = 0.01
-	mpc.train(config)
-	# config.custom_rewardf.time = 0.05
+	# config.custom_rewardf.time = 0.01
+	# mpc.train(config)
+	# config.custom_rewardf.time = 0.03
 	# mpc.train(config)
 
 	config.num_snakes = 4
-	# config.custom_rewardf.time = -0.05
+	config.custom_rewardf.time = -0.05
+	config.custom_rewardf.fruit = 1.0
+	config.custom_rewardf.kill = -10.0
+	mpc.train(config)
+	# config.num_snakes = 4
+	# config.custom_rewardf.time = -0.03
 	# mpc.train(config)
 	# config.custom_rewardf.time = -0.01
 	# mpc.train(config)
-	config.custom_rewardf.time = 0.01
-	mpc.train(config)
-	# config.custom_rewardf.time = 0.05
+	# config.custom_rewardf.time = 0.01
+	# mpc.train(config)
+	# config.custom_rewardf.time = 0.03
 	# mpc.train(config)
