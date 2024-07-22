@@ -10,10 +10,10 @@ from gym.vector.utils import write_to_shared_memory
 
 
 class AsyncState(Enum):
-    DEFAULT = 'default'
-    WAITING_RESET = 'reset'
-    WAITING_STEP = 'step'
-    WAITING_RENDER = 'render'
+    DEFAULT = "default"
+    WAITING_RESET = "reset"
+    WAITING_STEP = "step"
+    WAITING_RENDER = "render"
 
 
 class SingleAgent(gym.Wrapper):
@@ -24,12 +24,15 @@ class SingleAgent(gym.Wrapper):
         if self.vision_range:
             h = w = self.vision_range * 2 + 1
             self.observation_space = gym.spaces.Box(
-                self.low, self.high,
-                shape=(h, w, self.obs_ch), dtype=np.uint8)  # 8
+                self.low, self.high, shape=(h, w, self.obs_ch), dtype=np.uint8
+            )  # 8
         else:
             self.observation_space = gym.spaces.Box(
-                self.low, self.high,
-                shape=(*self.grid_shape, self.obs_ch), dtype=np.uint8)  # 8
+                self.low,
+                self.high,
+                shape=(*self.grid_shape, self.obs_ch),
+                dtype=np.uint8,
+            )  # 8
 
     def reset(self, **kwargs):
         wrapped_obs = self.env.reset(**kwargs)
@@ -47,13 +50,18 @@ class SingleMultiAgent(gym.Wrapper):
         if self.vision_range:
             h = w = self.vision_range * 2 + 1
             self.observation_space = gym.spaces.Box(
-                self.low, self.high,
-                shape=(self.num_snakes, h, w, self.obs_ch), dtype=np.uint8)
+                self.low,
+                self.high,
+                shape=(self.num_snakes, h, w, self.obs_ch),
+                dtype=np.uint8,
+            )
         else:
             self.observation_space = gym.spaces.Box(
-                self.low, self.high,
+                self.low,
+                self.high,
                 shape=(self.num_snakes, *self.grid_shape, self.obs_ch),
-                dtype=np.uint8)
+                dtype=np.uint8,
+            )
 
 
 class AsyncVectorMultiEnv(AsyncVectorEnv):
@@ -65,26 +73,29 @@ class AsyncVectorMultiEnv(AsyncVectorEnv):
         self._assert_is_running()
         if self._state.value != AsyncState.DEFAULT.value:
             raise AlreadyPendingCallError(
-                'Calling `render_async` while waiting '
-                'for a pending call to `{0}` to complete.'.format(
-                    self._state.value), self._state.value)
+                "Calling `render_async` while waiting "
+                "for a pending call to `{0}` to complete.".format(self._state.value),
+                self._state.value,
+            )
         else:
             self.default_state = self._state
-        self.parent_pipes[0].send(('render', None))
+        self.parent_pipes[0].send(("render", None))
         self._state = AsyncState.WAITING_RENDER
 
     def render_wait(self, timeout=None):
         self._assert_is_running()
         if self._state.value != AsyncState.WAITING_RENDER.value:
             raise NoAsyncCallError(
-                'Calling `render_wait` without any prior '
-                'call to `render_async`.', AsyncState.WAITING_RESET.value)
+                "Calling `render_wait` without any prior " "call to `render_async`.",
+                AsyncState.WAITING_RESET.value,
+            )
 
         if not self._poll(timeout):
             self._state = self.default_state
             raise mp.TimeoutError(
-                'The call to `render_wait` has timed out after '
-                '{0} second{1}.'.format(timeout, 's' if timeout > 1 else ''))
+                "The call to `render_wait` has timed out after "
+                "{0} second{1}.".format(timeout, "s" if timeout > 1 else "")
+            )
 
         result, success = self.parent_pipes[0].recv()
         self._raise_if_errors([success])
@@ -97,8 +108,7 @@ class AsyncVectorMultiEnv(AsyncVectorEnv):
         return self.render_wait()
 
 
-def _worker_shared_memory(index, env_fn, pipe, parent_pipe, shared_memory,
-                          error_queue):
+def _worker_shared_memory(index, env_fn, pipe, parent_pipe, shared_memory, error_queue):
     assert shared_memory is not None
     env = env_fn()
     observation_space = env.observation_space
@@ -106,14 +116,18 @@ def _worker_shared_memory(index, env_fn, pipe, parent_pipe, shared_memory,
     try:
         while True:
             command, data = pipe.recv()
-            if command == 'reset':
+            if command == "reset":
                 observation = env.reset()
-                write_to_shared_memory(observation_space, index, observation, shared_memory,
-                                       )
+                write_to_shared_memory(
+                    observation_space,
+                    index,
+                    observation,
+                    shared_memory,
+                )
                 # write_to_shared_memory(index, observation, shared_memory,
                 #                        observation_space)
                 pipe.send((None, True))
-            elif command == 'step':
+            elif command == "step":
                 observation, reward, done, info = env.step(data)
                 if type(done) == bool:
                     cond = done
@@ -121,34 +135,39 @@ def _worker_shared_memory(index, env_fn, pipe, parent_pipe, shared_memory,
                     cond = all(done)
                 if cond:
                     observation = env.reset()
-                write_to_shared_memory(observation_space, index, observation, shared_memory,
-                                       )
+                write_to_shared_memory(
+                    observation_space,
+                    index,
+                    observation,
+                    shared_memory,
+                )
                 # write_to_shared_memory(index, observation, shared_memory,
                 #                        observation_space)
                 pipe.send(((None, reward, done, info), True))
-            elif command == 'seed':
+            elif command == "seed":
                 env.seed(data)
                 pipe.send((None, True))
-            elif command == 'close':
+            elif command == "close":
                 pipe.send((None, True))
                 break
-            elif command == 'render':
-                img = env.render('rgb_array')
+            elif command == "render":
+                img = env.render("rgb_array")
                 pipe.send((img, True))
-            elif command == '_check_spaces':
+            elif command == "_check_spaces":
                 pipe.send(
                     (
-                        (data[0] == env.observation_space, data[1] == env.action_space), 
-                        True
+                        (data[0] == env.observation_space, data[1] == env.action_space),
+                        True,
                     )
                 )
             # elif command == '_check_observation_space':
             #     pipe.send((data == observation_space, True))
             else:
                 raise RuntimeError(
-                    'Received unknown command `{0}`. Must '
-                    'be one of {`reset`, `step`, `seed`, `close`, '
-                    '`_check_observation_space`}.'.format(command))
+                    "Received unknown command `{0}`. Must "
+                    "be one of {`reset`, `step`, `seed`, `close`, "
+                    "`_check_observation_space`}.".format(command)
+                )
     except (KeyboardInterrupt, Exception):
         error_queue.put((index,) + sys.exc_info()[:2])
         pipe.send((None, False))
@@ -165,6 +184,7 @@ def make_snake(num_envs=1, num_snakes=4, env_id="Snake-v1", **kwargs):
     :returns: A message (just for me, of course).
     """
     from gym.vector.async_vector_env import AsyncVectorEnv
+
     if num_snakes > 1:
         env_wrapper = SingleMultiAgent
     else:
@@ -186,14 +206,14 @@ def make_snake(num_envs=1, num_snakes=4, env_id="Snake-v1", **kwargs):
     high = dummyenv.observation_space.high
     low = dummyenv.observation_space.low
 
-    if 'Discrete' in str(type(dummyenv.action_space)):
-        action_info = {'action_n': dummyenv.action_space.n}
+    if "Discrete" in str(type(dummyenv.action_space)):
+        action_info = {"action_n": dummyenv.action_space.n}
         discrete = True
 
-    if 'Box' in str(type(dummyenv.action_space)):
+    if "Box" in str(type(dummyenv.action_space)):
         action_info = {
-            'action_high': dummyenv.action_space.high,
-            'action_low': dummyenv.action_space.low
+            "action_high": dummyenv.action_space.high,
+            "action_low": dummyenv.action_space.low,
         }
         discrete = False
 
@@ -205,13 +225,13 @@ def make_snake(num_envs=1, num_snakes=4, env_id="Snake-v1", **kwargs):
         env = _make()
 
     properties = {
-        'high': high,
-        'low': low,
-        'num_envs': num_envs,
-        'num_snakes': num_snakes,
-        'discrete': discrete,
-        'action_info': action_info,
+        "high": high,
+        "low": low,
+        "num_envs": num_envs,
+        "num_snakes": num_snakes,
+        "discrete": discrete,
+        "action_info": action_info,
     }
-    print(num_envs)
+    # print(num_envs)
 
     return env, observation_shape, action_shape, properties

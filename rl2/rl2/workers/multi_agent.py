@@ -17,9 +17,9 @@ class MultiAgentRolloutWorker:
         render=False,
         render_interval=1000,
         is_save=False,
-        data_dir='',
+        data_dir="",
         save_interval=int(1e6),
-        **kwargs
+        **kwargs,
     ):
         self.env = env
         self.n_env = n_env
@@ -31,7 +31,7 @@ class MultiAgentRolloutWorker:
         self.render = render
         if self.render:
             self.render_interval = render_interval
-            self.render_mode = kwargs.get('render_mode', 'rgb_array')
+            self.render_mode = kwargs.get("render_mode", "rgb_array")
 
         self.is_save = is_save
         if self.is_save:
@@ -52,15 +52,14 @@ class MultiAgentRolloutWorker:
 
     def save(self, save_dir):
         for i, agent in enumerate(self.agents):
-            _save_dir = os.path.join(save_dir,
-                                    f'ckpt/agent{i}/{self.num_steps//1000}k')
+            _save_dir = os.path.join(save_dir, f"ckpt/agent{i}/{self.num_steps//1000}k")
             Path(_save_dir).mkdir(parents=True, exist_ok=True)
             agent.model.save(_save_dir)
 
     def rollout(self):
         # Number of agents should always match with number of dimensions
         # returned and possibly the dones.
-        self.env.render('rgb_array')
+        self.env.render("rgb_array")
         acs = [agent.act(obs) for agent, obs in zip(self.agents, self.obs)]
         if self.n_env > 1 and self.n_agents > 1:
             acs = np.array(acs).swapaxes(0, 1)
@@ -82,11 +81,10 @@ class MultiAgentRolloutWorker:
 
         if self.training:
             for agent, obs, ac, rew, done, obs_ in zip(
-                    self.agents, self.obs, acs, rews, dones, obss):
+                self.agents, self.obs, acs, rews, dones, obss
+            ):
                 info_a = agent.step(obs, ac, rew, done, obs_)
-                # print(info_a)
                 infos.update(info_a)
-                # print(infos)
 
         self.num_steps += self.n_env
         dones = np.asarray(dones)
@@ -99,7 +97,7 @@ class MultiAgentRolloutWorker:
                 self.env.save_rows(self.data_dir)
                 obss = self.env.reset()
                 self.scores.append(self.episode_score.mean())
-                self.episode_score = 0.
+                self.episode_score = 0.0
                 self.ep_length.append(self.ep_steps)
                 self.ep_steps = 0
         else:
@@ -109,8 +107,7 @@ class MultiAgentRolloutWorker:
             self.num_episodes += sum(dones)
             for d_i in np.where(dones)[0]:
                 self.scores.append(self.episode_score[d_i].mean())
-                self.episode_score[d_i] = np.zeros_like(
-                    self.episode_score[d_i])
+                self.episode_score[d_i] = np.zeros_like(self.episode_score[d_i])
                 self.ep_length.append(self.ep_steps[d_i])
                 self.ep_steps[d_i] = 0
 
@@ -133,7 +130,7 @@ class SelfRolloutWorker:
         render_interval=1000,
         is_save=False,
         save_interval=int(1e6),
-        **kwargs
+        **kwargs,
     ):
         self.env = env
         self.n_env = n_env
@@ -145,7 +142,7 @@ class SelfRolloutWorker:
         self.render = render
         if self.render:
             self.render_interval = render_interval
-            self.render_mode = kwargs.get('render_mode', 'rgb_array')
+            self.render_mode = kwargs.get("render_mode", "rgb_array")
 
         self.is_save = is_save
         if self.is_save:
@@ -165,15 +162,14 @@ class SelfRolloutWorker:
             self.obs = self.obs.reshape((-1, *self.obs.shape[2:]))
 
     def save(self, save_dir):
-        save_dir = os.path.join(save_dir, f'ckpt/{int(self.num_steps/1000)}k')
+        save_dir = os.path.join(save_dir, f"ckpt/{int(self.num_steps/1000)}k")
         Path(save_dir).mkdir(parents=True, exist_ok=True)
         self.agent.model.save(save_dir)
 
     def rollout(self):
         # Number of agents should always match with number of dimensions
         # returned and possibly the dones.
-        acs = self.agent.act(self.obs).reshape(
-            self.n_env, self.n_agents, -1).squeeze()
+        acs = self.agent.act(self.obs).reshape(self.n_env, self.n_agents, -1).squeeze()
 
         obss, rews, dones, info = self.env.step(acs)
         self.episode_score = self.episode_score + np.array(rews)
@@ -205,7 +201,7 @@ class SelfRolloutWorker:
                 obss = self.env.reset()
                 obss = np.asarray(obss)
                 self.scores.append(self.episode_score.mean())
-                self.episode_score = 0.
+                self.episode_score = 0.0
                 self.ep_length.append(self.ep_steps)
                 self.ep_steps = 0
         else:
@@ -216,8 +212,7 @@ class SelfRolloutWorker:
             self.num_episodes += sum(dones)
             for d_i in np.where(dones)[0]:
                 self.scores.append(self.episode_score[d_i].mean())
-                self.episode_score[d_i] = np.zeros_like(
-                    self.episode_score[d_i])
+                self.episode_score[d_i] = np.zeros_like(self.episode_score[d_i])
                 self.ep_length.append(self.ep_steps[d_i])
                 self.ep_steps[d_i] = 0
 
@@ -238,20 +233,20 @@ def dynamic_class(cls1, cls2, *args, **kwargs):
 
 
 def MAMaxStepWorker(env, n_env, agent, **kwargs):
-    return dynamic_class(MultiAgentRolloutWorker, MaxStepWorker,
-                         env, n_env, agent, **kwargs)
+    return dynamic_class(
+        MultiAgentRolloutWorker, MaxStepWorker, env, n_env, agent, **kwargs
+    )
 
 
 def SelfMaxStepWorker(env, n_env, agent, **kwargs):
-    return dynamic_class(SelfRolloutWorker, MaxStepWorker,
-                         env, n_env, agent, **kwargs)
+    return dynamic_class(SelfRolloutWorker, MaxStepWorker, env, n_env, agent, **kwargs)
 
 
 def MAEpisodicWorker(env, n_env, agent, **kwargs):
-    return dynamic_class(MultiAgentRolloutWorker, EpisodicWorker,
-                         env, n_env, agent, **kwargs)
+    return dynamic_class(
+        MultiAgentRolloutWorker, EpisodicWorker, env, n_env, agent, **kwargs
+    )
 
 
 def SelfEpisodicWorker(env, n_env, agent, **kwargs):
-    return dynamic_class(SelfRolloutWorker, EpisodicWorker,
-                         env, n_env, agent, **kwargs)
+    return dynamic_class(SelfRolloutWorker, EpisodicWorker, env, n_env, agent, **kwargs)

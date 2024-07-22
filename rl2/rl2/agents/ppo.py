@@ -10,13 +10,13 @@ from rl2.agents.utils import general_advantage_estimation
 from rl2.buffers import ReplayBuffer, TemporalMemory
 
 
-def loss_func(data, model,
-              hidden=None, clip_param=0.1, vf_coef=0.5, ent_coef=0.001):
+def loss_func(data, model, hidden=None, clip_param=0.1, vf_coef=0.5, ent_coef=0.001):
 
     obs, old_acs, dones, _, old_vals, old_nlps, advs = data
     obs, old_acs, dones, old_vals, old_nlps, advs = map(
         lambda x: torch.from_numpy(x).float().to(model.device),
-        [obs, old_acs, dones, old_vals, old_nlps, advs])
+        [obs, old_acs, dones, old_vals, old_nlps, advs],
+    )
     val_targets = old_vals + advs
 
     # Infer from model
@@ -25,8 +25,7 @@ def loss_func(data, model,
     ent = ac_dist.entropy().mean()
     vals = val_dist.mean
 
-    vals_clipped = (old_vals + torch.clamp(vals - old_vals,
-                                           -clip_param, clip_param))
+    vals_clipped = old_vals + torch.clamp(vals - old_vals, -clip_param, clip_param)
     vf_loss_clipped = F.mse_loss(vals_clipped, val_targets)
     vf_loss = F.mse_loss(vals, val_targets)
     vf_loss = torch.max(vf_loss, vf_loss_clipped).mean()
@@ -51,44 +50,53 @@ class PPOModel(TorchModel):
     predefined model
     (same one as original paper)
     """
-    def __init__(self,
-                 observation_shape,
-                 action_shape,
-                 encoder: torch.nn.Module = None,
-                 encoded_dim: int = 64,
-                 optimizer='torch.optim.Adam',
-                 lr=1e-4,
-                 discrete: bool = True,
-                 deterministic: bool = False,
-                 flatten: bool = False,
-                 reorder: bool = False,
-                 recurrent: bool = False,
-                 **kwargs):
+
+    def __init__(
+        self,
+        observation_shape,
+        action_shape,
+        encoder: torch.nn.Module = None,
+        encoded_dim: int = 64,
+        optimizer="torch.optim.Adam",
+        lr=1e-4,
+        discrete: bool = True,
+        deterministic: bool = False,
+        flatten: bool = False,
+        reorder: bool = False,
+        recurrent: bool = False,
+        **kwargs,
+    ):
         # self.device = torch.device("mps")
         super().__init__(observation_shape, action_shape, **kwargs)
-        if hasattr(encoder, 'output_shape'):
+        if hasattr(encoder, "output_shape"):
             encoded_dim = encoder.output_shape
         # Handles only the 1-dim action space
         self.encoded_dim = encoded_dim
         self.recurrent = recurrent
-        self.policy = BranchModel(observation_shape, action_shape,
-                                  encoded_dim=encoded_dim,
-                                  discrete=discrete,
-                                  deterministic=deterministic,
-                                  flatten=flatten,
-                                  reorder=reorder,
-                                  recurrent=self.recurrent,
-                                  **kwargs)
+        self.policy = BranchModel(
+            observation_shape,
+            action_shape,
+            encoded_dim=encoded_dim,
+            discrete=discrete,
+            deterministic=deterministic,
+            flatten=flatten,
+            reorder=reorder,
+            recurrent=self.recurrent,
+            **kwargs,
+        )
 
-        self.value = BranchModel(observation_shape, (1,),
-                                #  encoder=self.policy.encoder,
-                                 encoded_dim=encoded_dim,
-                                 discrete=False,
-                                 deterministic=True,
-                                 flatten=flatten,
-                                 reorder=reorder,
-                                 recurrent=self.recurrent,
-                                 **kwargs)
+        self.value = BranchModel(
+            observation_shape,
+            (1,),
+            #  encoder=self.policy.encoder,
+            encoded_dim=encoded_dim,
+            discrete=False,
+            deterministic=True,
+            flatten=flatten,
+            reorder=reorder,
+            recurrent=self.recurrent,
+            **kwargs,
+        )
         self.policy.to(self.device)
         self.value.to(self.device)
 
@@ -122,9 +130,9 @@ class PPOModel(TorchModel):
 
         info = {}
         if get_log_prob:
-            info['log_prob'] = log_prob
+            info["log_prob"] = log_prob
         if self.recurrent:
-            info['hidden'] = hidden
+            info["hidden"] = hidden
 
         return action, info
 
@@ -135,14 +143,15 @@ class PPOModel(TorchModel):
 
         info = {}
         if self.recurrent:
-            info['hidden'] = hidden
+            info["hidden"] = hidden
 
         return value
 
     def save(self, save_dir):
-        torch.save(self.state_dict(),
-                   os.path.join(save_dir, type(self).__name__ + '.pt'))
-        print(f'model saved in {save_dir}')
+        torch.save(
+            self.state_dict(), os.path.join(save_dir, type(self).__name__ + ".pt")
+        )
+        print(f"model saved in {save_dir}")
 
     def load(self, load_dir):
         ckpt = torch.load(load_dir, map_location=self.device)
@@ -150,27 +159,30 @@ class PPOModel(TorchModel):
 
 
 class PPOAgent(Agent):
-    def __init__(self,
-                 model: TorchModel,
-                 train_interval: int = 128,
-                 num_epochs: int = 1,
-                 n_env=1,
-                 buffer_cls: ReplayBuffer = TemporalMemory,
-                 buffer_kwargs: dict = None,
-                 batch_size: int = 128,
-                 val_coef: float = 0.5,
-                 action_low: np.array = None,
-                 action_high: np.ndarray = None,
-                 loss_func: Callable = loss_func,
-                 save_interval: int = int(1e5),
-                 update_after: int = 1,
-                 gamma: float = 0.99,
-                 lamda: float = 0.95,
-                 log_interval: int = int(1e3),
-                 **kwargs):
+    def __init__(
+        self,
+        model: TorchModel,
+        train_interval: int = 128,
+        num_epochs: int = 1,
+        n_env=1,
+        buffer_cls: ReplayBuffer = TemporalMemory,
+        buffer_kwargs: dict = None,
+        batch_size: int = 128,
+        val_coef: float = 0.5,
+        action_low: np.array = None,
+        action_high: np.ndarray = None,
+        loss_func: Callable = loss_func,
+        save_interval: int = int(1e5),
+        update_after: int = 1,
+        gamma: float = 0.99,
+        lamda: float = 0.95,
+        log_interval: int = int(1e3),
+        **kwargs,
+    ):
         # self.buffer = ReplayBuffer()
-        super().__init__(model, train_interval, num_epochs,
-                         buffer_cls, buffer_kwargs, **kwargs)
+        super().__init__(
+            model, train_interval, num_epochs, buffer_cls, buffer_kwargs, **kwargs
+        )
 
         # TODO: some of these can be moved to base class
         self.obs = None
@@ -198,12 +210,12 @@ class PPOAgent(Agent):
 
     def act(self, obs):
         action, info = self.model.act(obs, get_log_prob=True)
-        self.nlp = -info['log_prob']
+        self.nlp = -info["log_prob"]
         self.value = self.model.val(obs)
 
         # TODO: should recurrent relavent calls be handled in base class?
         if self.model.recurrent:
-            self.hidden = info['hidden']
+            self.hidden = info["hidden"]
 
         return action
 
@@ -218,10 +230,9 @@ class PPOAgent(Agent):
         info = {}
         if self.curr_step % self.train_interval == 0:
             value = self.model.val(s_)
-            advs = general_advantage_estimation(self.buffer.to_dict(),
-                                                value, d,
-                                                self.gamma, self.lamda)
-            print("train!!!!!!!!!!!!")
+            advs = general_advantage_estimation(
+                self.buffer.to_dict(), value, d, self.gamma, self.lamda
+            )
             info = self.train(advs)
             self.buffer.reset()
             if self.model.recurrent:
@@ -232,16 +243,17 @@ class PPOAgent(Agent):
     def train(self, advs, **kwargs):
         losses = []
         for _ in range(self.num_epochs):
-            num_minibatches = (self.buffer.curr_size * self.n_env
-                               // self.batch_size)
+            num_minibatches = self.buffer.curr_size * self.n_env // self.batch_size
             self.buffer.shuffle()
             for mb_idx in range(num_minibatches):
                 batch_data = self.buffer.sample(
-                    self.batch_size, return_idx=True,
-                    recurrent=self.model.recurrent)
+                    self.batch_size, return_idx=True, recurrent=self.model.recurrent
+                )
                 idx, sub_idx = batch_data[-1]
-                batch_data = (*batch_data[:-1],
-                              np.expand_dims(advs[idx, sub_idx], axis=1))
+                batch_data = (
+                    *batch_data[:-1],
+                    np.expand_dims(advs[idx, sub_idx], axis=1),
+                )
                 if self.model.recurrent:
                     env_idx = sub_idx.reshape(self.buffer.max_size, -1)[0]
                     hidden = tuple([ph[:, env_idx] for ph in self.pre_hidden])
@@ -254,11 +266,7 @@ class PPOAgent(Agent):
                 loss.backward()
                 self.optimizer.step()
                 losses.append(loss.item())
-        info = {
-            'Loss/All': sum(losses) / (len(losses) + 1e-8)
-        }
-        print("------------------------------------")
-        print(info)
+        info = {"Loss/All": sum(losses) / (len(losses) + 1e-8)}
         return info
 
     def collect(self, *args):
