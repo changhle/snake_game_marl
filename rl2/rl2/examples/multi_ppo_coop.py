@@ -4,8 +4,8 @@ from easydict import EasyDict
 
 import sys
 
-sys.path.append("/Users/changhee/Lab/test_marlenv/marlenv")
-sys.path.append("/Users/changhee/Lab/test_marlenv/rl2")
+sys.path.append("../../../marlenv")
+sys.path.append("../../../rl2")
 
 import marlenv
 from marlenv.wrappers import make_snake
@@ -158,10 +158,10 @@ def test(config, load_dir=None):
 
 if __name__ == "__main__":
     myconfig = {
-        "n_env": 64,
+        "n_env": 24,
         "num_snakes": 2,
-        "width": 20,
-        "height": 20,
+        "width": 14,
+        "height": 14,
         "vision_range": 5,
         "frame_stack": 2,
         "batch_size": 512,
@@ -170,7 +170,7 @@ if __name__ == "__main__":
         "train_interval": 512,
         "log_level": 10,
         "log_interval": 5000,
-        "save_interval": 10000,
+        "save_interval": 1000000,
         "lr": 1e-4,
         "gamma": 0.99,
         "grad_clip": 10,
@@ -178,12 +178,12 @@ if __name__ == "__main__":
         "custom_rewardf": {
             "fruit": 1.0,
             "kill": -1.0,
-            "lose": -10.0,
+            "lose": 0.0,
             "win": 0.0,
             "time": -0.01,
         },
     }
     config = EasyDict(myconfig)
 
-    # log_dir = train(config)
-    test(config)
+    log_dir = train(config)
+    # test(config)

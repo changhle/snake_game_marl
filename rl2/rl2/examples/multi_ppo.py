@@ -153,8 +153,8 @@ if __name__ == "__main__":
     myconfig = {
         "n_env": 24,
         "num_snakes": 4,
-        "width": 20,
-        "height": 20,
+        "width": 14,
+        "height": 14,
         "vision_range": 5,
         "frame_stack": 2,
         "batch_size": 512,
@@ -163,7 +163,7 @@ if __name__ == "__main__":
         "train_interval": 128,
         "log_level": 10,
         "log_interval": 5000,
-        "save_interval": 10000,
+        "save_interval": 1000000,
         "lr": 1e-4,
         "gamma": 0.99,
         "grad_clip": 10,
@@ -173,12 +173,12 @@ if __name__ == "__main__":
             "kill": -1.0,
             "lose": 0.0,
             "win": 0.0,
-            "time": 0.1,
+            "time": -0.01,
         },
     }
     config = EasyDict(myconfig)
 
-    # log_dir = train(config)
+    log_dir = train(config)
     # log_dir = 'runs/DEBUG/20210505180137'
     # test(config, load_dir=log_dir)
-    test(config)
+    # test(config)
